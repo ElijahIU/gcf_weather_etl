@@ -19,9 +19,10 @@ exports.readObservation = (file, context) => {
         console.error(error)
     })
     .pipe(csv())
-    .on('data', () => {
+    .on('data', (row) => {
         //Log row data 
         console.log(row)
+        printDict(row);
     })
     .on('end', () => {
         //Handle end of csv
@@ -29,3 +30,10 @@ exports.readObservation = (file, context) => {
     })
 
  }
+//Helper Functions
+function printDict(row){
+    for (let key in row){
+        console.log(key + ':' + row[key]);
+    }
+}
+ 
