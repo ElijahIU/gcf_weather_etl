@@ -19,7 +19,7 @@ exports.readObservation = (file, context) => {
         console.error(error)
     })
     .pipe(csv())
-    .on('data', () => {
+    .on('data', (row) => {
         //Log row data 
         console.log(row)
     })
