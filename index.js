@@ -1,39 +1,44 @@
 const {Storage} = require('@google-cloud/storage');
-const { error } = require('console');
-const csv = require ('csv-parser');
+const csv = require('csv-parser');
 
 exports.readObservation = (file, context) => {
-//     console.log(`  Event: ${context.eventId}`);
-//     console.log(`  Event Type: ${context.eventType}`);
-//     console.log(`  Bucket: ${file.bucket}`);
-//     console.log(`  File: ${file.name}`);
-
     const gcs = new Storage();
-
-
     const dataFile = gcs.bucket(file.bucket).file(file.name);
 
     dataFile.createReadStream()
-    .on('error', () => {
-        //Handle an error 
-        console.error(error)
+    .on('error', (error) => {
+        console.error(error);
     })
     .pipe(csv())
     .on('data', (row) => {
-        //Log row data 
-        console.log(row)
-        printDict(row);
+        // Transform data
+        transformData(row);
     })
     .on('end', () => {
-        //Handle end of csv
-        console.log('End!')
-    })
-
- }
-//Helper Functions
-function printDict(row){
-    for (let key in row){
-        console.log(key + ':' + row[key]);
-    }
+        console.log('End!');
+    });
 }
- 
+
+// Helper function to transform data
+function transformData(row) {
+    // Convert values to numeric
+    for (let key in row) {
+        row[key] = parseFloat(row[key]);
+    }
+
+    // Transform specific fields
+    // Handle null values and scale numeric fields
+    const numericFields = ['airtemp', 'dewpoint', 'pressure', 'windspeed', 'precip1hour', 'precip6hour'];
+    numericFields.forEach(field => {
+        if (row[field] === -9999) {
+            row[field] = null; // Rewrite -9999 as null
+        } else {
+            row[field] /= 10; // Divide by 10
+        }
+    });
+
+    // Add station id directly
+    row['station'] = '724380-93819'; // Hardcoded station id for Indianapolis
+
+    console.log(row); // Output transformed row
+}
